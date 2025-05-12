@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import chat
+from app.routers import chat, chat_log
 import openai
 import os
 from dotenv import load_dotenv
@@ -23,6 +23,7 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(chat.router)
+app.include_router(chat_log.router)
 
 @app.get("/")
 def root():
