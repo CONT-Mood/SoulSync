@@ -94,32 +94,16 @@ const ChatMain = () => {
 
       <button
         onClick={() => setShowGauge(true)}
-        style={{
-          position: 'absolute',
-          bottom: '32%',
-          left: '30%',
-          zIndex: 20,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          outline: 'none',
-        }}
+        className="absolute bottom-[32%] left-[30%] z-20 group focus:outline-none active:outline-none"
+        style={{ outline: 'none', border: 'none' }}
       >
-        <div style={{ position: 'relative', width: '180px', height: '180px' }}>
-          <img src={btnGuage} alt="단어" className="w-full h-full opacity-60" />
-          <span
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: '#4C5AA9',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              pointerEvents: 'none',
-              opacity: '90%',
-            }}
-          >
+        <div className="w-32 h-32 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-white/20 flex flex-col items-center justify-center">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mb-2">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <span className="text-white font-semibold text-s tracking-wide text-center">
             나의 상태
           </span>
         </div>
