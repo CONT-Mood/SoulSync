@@ -16,7 +16,7 @@ const getGaugeColor = (value: number) => {
 
 const GaugeBar = ({ label, value }: { label: string; value: number }) => {
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       <div className="font-semibold text-black">{label}</div>
       <div className="w-full h-4 bg-gray-300 rounded-full">
         <div
@@ -30,16 +30,20 @@ const GaugeBar = ({ label, value }: { label: string; value: number }) => {
 
 const GaugeBox: React.FC<GaugeBoxProps> = ({ depression, anxiety, lethargy, onClose }) => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-xl w-[300px] relative z-50">
+    <div className="bg-white px-6 pt-6 pb-4 rounded-xl shadow-xl w-[300px] relative z-50">
       <button
         onClick={onClose}
-        className="absolute top-2 right-3 text-lg text-gray-600 hover:text-black"
+        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all duration-200 text-sm font-bold"
       >
         ✕
       </button>
-      <GaugeBar label="우울" value={depression} />
+      <div className="mt-4">
+        <GaugeBar label="우울" value={depression} />
+      </div>
       <GaugeBar label="불안" value={anxiety} />
-      <GaugeBar label="무기력" value={lethargy} />
+      <div className="mb-0">
+        <GaugeBar label="무기력" value={lethargy} />
+      </div>
     </div>
   );
 };
