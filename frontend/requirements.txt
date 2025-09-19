@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+openai>=1.104.2
+pydantic
+motor
+firebase_admin
+langchain
+langchain-openai
+chromadb
+faiss-cpu
+tiktoken
