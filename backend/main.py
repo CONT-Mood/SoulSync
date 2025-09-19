@@ -30,3 +30,4 @@ app.include_router(user_router.router, prefix="/user")
 @app.get("/")
 def root():
     return {"message": "SoulSync API is running."}
+
