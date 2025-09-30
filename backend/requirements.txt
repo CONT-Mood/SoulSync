@@ -1,7 +1,30 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-openai==0.28.1
-pydantic
-motor
-firebase_admin
+# --- web & config ---
+fastapi>=0.116.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.1
+pydantic>=2.7.0
+
+# --- OpenAI (새 SDK) ---
+openai>=1.40.0
+tiktoken>=0.7.0
+httpx>=0.27.0
+
+# --- LangChain (0.3 계열 분리 패키지) ---
+langchain>=0.3.4
+langchain-community>=0.3.3
+langchain-openai>=0.2.3
+langchain-text-splitters>=0.3.0
+
+# --- Vector DB (기본: Chroma) ---
+chromadb>=0.5.5
+
+# --- 데이터 전처리/유틸 ---
+numpy>=1.26.0
+pandas>=2.2.0
+tqdm>=4.66.0
+typing_extensions>=4.12.0
+tenacity>=8.2.0
+
+# --- Mongo/Firebase (프로젝트 종속) ---
+motor>=3.6.0
+firebase_admin>=7.0.0
