@@ -115,26 +115,57 @@ const ChatMain = () => {
       )}
 
       {showCrisisModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl p-8 w-[400px] text-center relative">
-            <h2 className="text-lg font-bold text-red-600 mb-3">안내해드릴까요?</h2>
-            <p className="text-sm text-gray-800 mb-6 leading-relaxed">
-              혹시 지금 많이 힘들다면?<br />
-              필요한 경우 안전한 도움을 받을 수 있도록 도와드릴게요.
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setShowCrisisModal(false)}
-                className="px-4 py-2 rounded-lg border border-gray-400 text-gray-700 hover:bg-gray-100"
-              >
-                네, 괜찮아요.
-              </button>
-              <button
-                onClick={() => navigate("/crisis", { state: { fromChat: true } })}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
-              >
-                네, 안내해주세요.
-              </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* 배경 */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowCrisisModal(false)}
+          />
+
+          {/* 은은한 장식 */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-32 -right-28 w-72 h-72 bg-gradient-to-br from-blue-400/25 to-purple-400/25 rounded-full blur-3xl" />
+            <div className="absolute -bottom-32 -left-28 w-72 h-72 bg-gradient-to-br from-purple-400/25 to-pink-400/25 rounded-full blur-3xl" />
+          </div>
+
+          {/* 카드 */}
+          <div className="relative z-[101] w-[min(92vw,480px)]">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+              {/* 헤더 */}
+              <div className="px-6 pt-6 text-center">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+                  도움이 필요하신가요?
+                </h2>
+                <p className="mt-2 text-sm text-gray-600">
+                  가까운 상담기관과 <span className="whitespace-nowrap">24시간 핫라인</span>을 안내해 드릴 수 있어요.
+                </p>
+              </div>
+
+              {/* 아이콘 + 메시지 */}
+              <div className="px-6 pb-2 pt-4 flex flex-col items-center text-center">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white grid place-items-center shadow-md mb-3">
+                  <span className="text-xl font-bold">💬</span>
+                </div>
+                <p className="text-[15px] leading-relaxed text-gray-800">
+                  지금 바로 안내를 받으시겠어요?
+                </p>
+              </div>
+
+              {/* 버튼 */}
+              <div className="px-6 pt-4 pb-6 flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setShowCrisisModal(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                >
+                  아니요, 괜찮아요.
+                </button>
+                <button
+                  onClick={() => navigate("/crisis", { state: { fromChat: true } })}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:opacity-90 transition shadow-sm"
+                >
+                  네, 안내해주세요.
+                </button>
+              </div>
             </div>
           </div>
         </div>

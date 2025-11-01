@@ -3,7 +3,7 @@ from typing import Optional, Literal
 
 class ChatRequest(BaseModel):
     user_id: str
-    character: Literal["insightful", "trauma_sensitive", "empathic", "pragmatic"]
+    character: Literal["cognitive", "trauma", "empath", "advisor"]
     message: str
     show_emotion_score: Optional[bool] = Field(False, description="감정 게이지 표시 여부")
 
