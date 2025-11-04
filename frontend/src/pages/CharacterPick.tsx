@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import CharacterCard from '../components/CharacterPickForm';
 import { useCharacter, type Character } from '../contexts/CharacterContext';
 
-import empathImg from '../assets/empath.png';
-import cognitiveImg from '../assets/cognitive.png';
-import advisorImg from '../assets/advisor.png';
-import traumaImg from '../assets/trauma.png';
+import empathImg from '../assets/im_2.png';
+import cognitiveImg from '../assets/im_3.png';
+import advisorImg from '../assets/im_11.png';
+import traumaImg from '../assets/im_6.png';
 
 const CharacterPick: React.FC = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const CharacterPick: React.FC = () => {
       id: "cognitive",
       name: "인지적 통찰가형", 
       image: cognitiveImg,
-      description: "문제를 다각도로 분석하고 깊이 있는 통찰을 제공하는 지혜로운 친구입니다.",
+      description: "문제를 다각도로 분석하고 깊은 통찰을 제공하는 지혜로운 친구입니다.",
       personality: "논리적이고 분석적이며, 문제의 근본 원인을 찾아 해결책을 제시합니다.",
       greeting: "안녕하세요! 저는 문제를 다각도로 분석하여 깊이 있는 통찰을 제공해드릴게요. 어떤 고민이 있으신가요?"
     },
@@ -47,7 +47,7 @@ const CharacterPick: React.FC = () => {
       id: "trauma",
       name: "트라우마 민감형",
       image: traumaImg,
-      description: "트라우마와 심리적 상처에 특별히 민감하고 전문적인 도움을 제공하는 친구입니다.",
+      description: "트라우마와 심리적 상처에 다가가 전문적으로 도움을 주는 친구입니다.",
       personality: "트라우마에 대한 깊은 이해를 바탕으로 안전하고 전문적인 상담을 제공합니다.",
       greeting: "안녕하세요! 저는 트라우마와 심리적 상처에 특별히 민감한 상담을 제공해드릴게요. 안전한 공간에서 이야기해주세요."
     }

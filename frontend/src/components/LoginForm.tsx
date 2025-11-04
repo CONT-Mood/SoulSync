@@ -74,7 +74,6 @@ export default function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 pr-12"
                 autoComplete="current-password"
-                style={{ WebkitTextSecurity: showPassword ? 'none' : 'disc' }}
                 required
               />
               <button

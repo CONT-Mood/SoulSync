@@ -5,7 +5,7 @@ import { CharacterProvider } from "./contexts/CharacterContext";
 import Login from "./pages/Login";
 import ChatMain from "./pages/ChatMain";
 import DiagnosisPick from "./pages/DiagnosisPick";
-import CrisisSupport from "./pages/CrisisSupport"; // 위기지원 페이지
+import CrisisSupport from "./pages/CrisisSupport";
 import CharacterPick from "./pages/CharacterPick";
 import PSS from "./pages/PSS";
 import PHQ9 from "./pages/PHQ9";
@@ -21,7 +21,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/chat" element={<ChatMain />} />
           <Route path="/diagnosis" element={<DiagnosisPick />} />
-          <Route path="/crisis" element={<CrisisSupport />} /> {/* 위기지원 */}
+          <Route path="/crisis" element={<CrisisSupport />} />
           <Route path="/pss" element={<PSS />} />
           <Route path="/phq9" element={<PHQ9 />} />
           <Route path="/gad7" element={<GAD7 />} />

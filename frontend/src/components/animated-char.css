@@ -1,0 +1,27 @@
+.char-wrap {
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+}
+.char {
+  width: 100%;
+  animation: tilt 5s ease-in-out infinite, breathe 4.5s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char-wrap, .char { animation: none !important; }
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes tilt {
+  0%,100% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+@keyframes breathe {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
