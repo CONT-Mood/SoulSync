@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import sendIcon from '../assets/send-icon.svg';
+import sendIcon from '../assets/send_img.png';
 import { sendChatMessage } from '../api/chat';
 import { useCharacter } from '../contexts/CharacterContext';
 
@@ -64,7 +64,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ setModelReply, setEmotionScore })
 
 
   return (
-    <div className="w-full px-6 py-6 border-t border-gray-200 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="w-full px-6 py-6 border-t border-gray-200 bg-gradient-to-br from-blue-50 via-white to-purple-150">
       <div className="max-w-4xl mx-auto">
         <div className="relative">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-lg focus-within:border-purple-400 focus-within:ring-2 focus-within:ring-purple-100 transition-all duration-200 hover:shadow-xl">
@@ -98,12 +98,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ setModelReply, setEmotionScore })
                 disabled={!message.trim()}
                 className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 mr-2 ${
                   message.trim()
-                    ? 'bg-transparent text-gray-600 hover:scale-105'
+                    ? 'bg-transparent text-gray-600 hover:scale-125'
                     : 'bg-transparent text-gray-400 cursor-not-allowed'
                 }`}
                 style={{ outline: 'none', border: 'none' }}
               >
-                <img src={sendIcon} alt="보내기" className="w-5 h-5" />
+                <img src={sendIcon} alt="보내기" className="w-13 h-13" />
               </button>
             </div>
           </div>

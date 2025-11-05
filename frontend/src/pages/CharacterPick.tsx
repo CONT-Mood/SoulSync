@@ -92,7 +92,7 @@ const CharacterPick: React.FC = () => {
       </div>
 
       <div className="relative z-10 mt-16 text-center">
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center space-x-3">
           <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-xs">S</span>
           </div>

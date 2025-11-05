@@ -69,10 +69,9 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onClick }) => 
           </div>
         </div>
       </div>
-
       {/* 텍스트 */}
       <div className="relative z-10 text-center h-24 flex flex-col justify-center">
-        <h3 className="text-xl font-bold text-gray-800 mb-2 transition-colors duration-300 group-hover:text-blue-600">
+        <h3 className="text-xl font-bold text-gray-800 mb-4 transition-colors duration-300 group-hover:text-blue-600">
           {character.name}
         </h3>
         <p className="text-sm text-gray-600 leading-relaxed transition-colors duration-300 group-hover:text-gray-700 line-clamp-2">

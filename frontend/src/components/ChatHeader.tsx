@@ -6,7 +6,7 @@ const ChatHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
   const { selectedCharacter } = useCharacter();
 
   return (
-    <div className="flex justify-between items-center px-4 py-2 border-b border-gray-200 z-50 relative bg-gradient-to-r from-blue-50 via-white to-purple-50">
+    <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 z-50 relative bg-gradient-to-r from-blue-50 via-white to-purple-50">
       <button 
         onClick={onToggleSidebar}
         className="p-1 hover:bg-gray-100 rounded-lg transition-colors duration-200"
@@ -36,7 +36,7 @@ const ChatHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
       <div className="space-x-2">
         <button
           onClick={() => navigate("/diagnosis")}
-          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-xs font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
+          className="px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-xs font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
         >
           진단하기
         </button>
