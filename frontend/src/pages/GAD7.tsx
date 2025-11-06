@@ -16,17 +16,17 @@ const GAD7 = () => {
   ];
 
   const options = [
-    '전혀 방해 받지 않았다',
-    '며칠 동안 방해 받았다',
-    '2주중 절반 이상 방해 받았다',
-    '거의 매일 방해 받았다',
+    '전혀 방해 받지 않았다.',
+    '며칠 동안 방해 받았다.',
+    '2주중 절반 이상 방해 받았다.',
+    '거의 매일 방해 받았다.',
   ];
 
   const scoreMap: Record<string, number> = {
-    '전혀 방해 받지 않았다': 0,
-    '며칠 동안 방해 받았다': 1,
-    '2주중 절반 이상 방해 받았다': 2,
-    '거의 매일 방해 받았다': 3,
+    '전혀 방해 받지 않았다.': 0,
+    '며칠 동안 방해 받았다.': 1,
+    '2주중 절반 이상 방해 받았다.': 2,
+    '거의 매일 방해 받았다.': 3,
   };
 
   const handleChange = (questionId: number, value: string) => {
@@ -44,16 +44,15 @@ const GAD7 = () => {
 
   return (
     <div className="min-h-screen bg-white text-black px-6 py-10 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">일반화된 불안장애 척도-7 (GAD-7)</h1>
-      <p className="text-sm text-gray-700 mb-10 whitespace-pre-line">
-        지난 2주 동안 아래 문제들로 인해 얼마나 자주 방해를 받으셨습니까?
-        해당하는 빈도를 선택해주세요.
+      <h1 className="text-3xl font-bold mb-4">일반화된 불안장애 척도-7 ( GAD-7 )</h1>
+      <p className="text-m text-gray-700 mb-10 font-bold whitespace-pre-line">
+        지난 2주 동안 아래 항목의 문제들로 인해 방해를 받은 빈도를 측정해 답변해주세요. 
       </p>
 
       {questions.map((q) => (
-        <div key={q.id} className="mb-6 border rounded-lg bg-gray-50 p-4">
+        <div key={q.id} className="mb-4 border rounded-lg bg-gray-50 p-3">
           <p className="font-semibold mb-4">{q.id}. {q.text}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-6 px-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-y-4 gap-x-6 px-2 text-sm">
             {options.map((opt) => (
               <label key={opt} className="flex items-center space-x-2 text-black mb-1">
                 <input
@@ -81,9 +80,9 @@ const GAD7 = () => {
       {score !== null && (
         <div
         className="text-center mt-10 mb-20 text-xl font-semibold"
-        style={{ color: "#0A1172" }}
+        style={{ color: "#3D56A6" }}
         >
-        당신의 총 점수는 <span className="font-bold">{score}</span>점 입니다.
+        사용자의 불안도 검사 점수는 <span className="font-bold">{score}</span>점 입니다.
       </div>
 )}
     </div>

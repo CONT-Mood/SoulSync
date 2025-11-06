@@ -21,7 +21,7 @@ const DiagnosisPick: React.FC = () => {
       {/* 상단 제목 */}
       <div className="mt-20 text-center">
         <h1 className="text-5xl font-bold mb-2">SoulSync는 처음이시군요!</h1>
-        <h2 className="text-2xl font-medium mt-6 mb-8">당신에 대해 알려주세요.</h2>
+        <h2 className="text-2xl font-medium mt-6 mb-8">사용자님에 대해 알려주세요.</h2>
       </div>
 
       {/* 버튼 + 안내 문구 영역 */}
@@ -42,10 +42,17 @@ const DiagnosisPick: React.FC = () => {
         </div>
 
         {/* 하단 문구 */}
+        <div className="w-12 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mt-10">
+            <span className="text-white font-bold text-xs">S</span>
+          </div>
         <p className="text-sm text-gray-500 text-center mt-4">
           <span className="text-blue-600 cursor-pointer hover:underline">아니요,</span>{' '}
           를 선택하시면 SoulSync의 정확도가 떨어질 수 있어요.
         </p>
+        <p className="text-sm text-gray-500 text-center mt-2">
+          해당 검사는 SoulSync 모델의 정확한 상담을 위한 모델 학습에만 사용되며, 그 외 목적으로 절대 이용되지 않습니다.
+        </p>
+
       </div>
     </div>
   );

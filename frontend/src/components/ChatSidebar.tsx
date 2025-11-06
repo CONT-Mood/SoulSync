@@ -2,8 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import { useCharacter } from "../contexts/CharacterContext";
 import { useEffect, useMemo, useState } from "react";
-
-// ✅ 백엔드 API
 import { getChatDates, getSummaryByDate } from "../api/chatLog";
 
 type ChatSidebarProps = {

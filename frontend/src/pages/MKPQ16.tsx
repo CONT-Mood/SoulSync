@@ -47,16 +47,16 @@ const MKPQ16 = () => {
 
   return (
     <div className="min-h-screen bg-white text-black px-6 py-10 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">교정된 정신증 고위험군 선별도구 (mKPQ-16)</h1>
-      <p className="text-sm text-gray-700 mb-10 whitespace-pre-line">
-        지난 한달 동안 다음의 생각, 느낌, 경험이 있었는지에 대해 "예" 또는 "아니오"로 응답해주세요.
-        술이나 약물 복용 등으로 인한 경험은 제외하며, "예"라고 답한 항목은 해당 경험이 얼마나 힘들었는지도 고려해주세요.
+      <h1 className="text-3xl font-bold mb-4">교정된 정신증 고위험군 선별도구 ( mKPQ-16 )</h1>
+      <p className="text-m text-gray-700 mb-10 font-bold whitespace-pre-line">
+        지난 한달 동안 다음 항목의 생각, 느낌, 경험이 있었는지에 대해 "예" 또는 "아니오"로 응답해주세요.
+        술이나 약물 복용으로 인한 경험은 제외되며, "예" 답변은 항목의 심각도를 고려해 답변해주세요.
       </p>
 
       {questions.map((q) => (
-        <div key={q.id} className="mb-6 border rounded-lg bg-gray-50 p-4">
+        <div key={q.id} className="mb-4 border rounded-lg bg-gray-50 p-3">
           <p className="font-semibold mb-4">{q.id}. {q.text}</p>
-          <div className="grid grid-cols-2 gap-x-4 px-2 text-sm">
+          <div className="grid grid-cols-1 gap-y-2 px-2 text-sm">
             {options.map((opt) => (
               <label key={opt} className="flex items-center space-x-2 text-black">
                 <input
@@ -75,7 +75,7 @@ const MKPQ16 = () => {
 
       <button
         onClick={handleSubmit}
-        className="block mx-auto px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-md text-sm font-semibold transition font-['Pretendard']"
+        className="block mx-auto px-4 py-2 bg-blue-100 hover:bg-blue-100 rounded-md text-sm font-semibold transition font-['Pretendard']"
         style={{ color: "#3D56A6" }}
       >
         결과보기
@@ -84,9 +84,9 @@ const MKPQ16 = () => {
       {score !== null && (
         <div
         className="text-center mt-10 mb-20 text-xl font-semibold"
-        style={{ color: "#0A1172" }}
+        style={{ color: "#3D56A6" }}
         >
-        당신의 총 점수는 <span className="font-bold">{score}</span>점 입니다.
+        사용자의 정신증 고위험군 검사 점수는 <span className="font-bold">{score}</span>점 입니다.
       </div>
 )}
     </div>

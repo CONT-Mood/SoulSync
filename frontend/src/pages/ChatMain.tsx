@@ -133,7 +133,7 @@ const ChatMain = () => {
         </aside>
       )}
 
-      {/* 히어로 */}
+      {/* 섹션 */}
       <section className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto px-6 mt-52 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-10 w-full">
           {/* 캐릭터 */}
@@ -148,7 +148,7 @@ const ChatMain = () => {
 
           {/* 말풍선 */}
           <div className="lg:col-span-7 flex justify-center lg:justify-end">
-            <div className="max-w-[640px] w-full bg-white rounded-[24px] shadow-[0_18px_50px_rgba(0,0,0,0.14)] border border-gray-100 px-6 py-5">
+            <div className="max-w-[640px] w-full bg-white rounded-[24px] shadow-[0_18px_50px_rgba(0,0,0,0.1)] border border-gray-100 px-6 py-5">
               <div
                 className="text-center text-[15px] md:text-base leading-relaxed whitespace-pre-wrap"
                 style={bubbleTextStyle}

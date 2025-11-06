@@ -42,14 +42,14 @@ const PHQ9 = () => {
 
   return (
     <div className="min-h-screen bg-white text-black px-6 py-10 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">우울증 건강설문-9 (PHQ-9)</h1>
-      <p className="text-sm text-gray-700 mb-10 whitespace-pre-line">
-        지난 2주간, 얼마나 자주 다음과 같은 문제들로 고통을 겪으셨습니까?
-        각 문항에 대해 아래와 같은 기간에 해당하면 선택해 주세요.
+      <h1 className="text-3xl font-bold mb-2">우울증 건강설문-9 ( PHQ-9 )</h1>
+      <p className="text-m text-gray-700 mb-10 font-bold whitespace-pre-line">
+        각 문항의 감정을 얼마나 자주 느꼈는지 신중히 답변 부탁드립니다.
+
       </p>
 
       {questions.map((q) => (
-        <div key={q.id} className="mb-6 border rounded-lg bg-gray-50 p-4">
+        <div key={q.id} className="mb-4 border rounded-lg bg-gray-50 p-3">
           <p className="font-semibold mb-4">{q.id}. {q.text}</p>
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 px-2 text-sm">
             {options.map((opt) => (
@@ -70,7 +70,7 @@ const PHQ9 = () => {
 
       <button
         onClick={handleSubmit}
-        className="block mx-auto px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-md text-sm font-semibold transition font-['Pretendard']"
+        className="block mx-auto px-4 py-2 bg-blue-100 hover:bg-blue-100 rounded-md text-sm font-semibold transition font-['Pretendard']"
         style={{ color: "#3D56A6" }}
       >
         결과보기
@@ -79,9 +79,9 @@ const PHQ9 = () => {
       {score !== null && (
         <div
         className="text-center mt-10 mb-20 text-xl font-semibold"
-        style={{ color: "#0A1172" }}
+        style={{ color: "#3D56A6" }}
         >
-        당신의 총 점수는 <span className="font-bold">{score}</span>점 입니다.
+        사용자의 우울도 검사 점수는 <span className="font-bold">{score}</span>점 입니다.
       </div>
 )}
     </div>
