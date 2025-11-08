@@ -202,3 +202,14 @@ async def summary_today(
         "count_messages": len(pairs),
         "summary": summary
     }
+
+@router.delete("/reset")
+async def reset_chat_logs(
+    user_id: str = Query(...),
+    db: AsyncIOMotorDatabase = Depends(get_database),
+):
+    await chat.delete_user_chats(db, user_id)
+    return {
+        "ok": True,
+        "message": "All chat logs deleted"
+    }

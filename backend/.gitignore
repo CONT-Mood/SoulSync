@@ -2,3 +2,5 @@
 
 # 가상환경 무시
 chatbot_env/
+
+__pycache__/
