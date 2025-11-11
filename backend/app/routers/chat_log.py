@@ -1,3 +1,4 @@
+# routers/chat_log.py
 from fastapi import APIRouter, Depends, Query
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
@@ -5,36 +6,45 @@ from datetime import datetime
 from app.crud import chat
 from app.db.mongo import get_database
 
-# 요약 생성을 위한 OpenAI
-import os, openai, re   # ⬅️ re 추가
+# OpenAI
+import os, openai, re
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 router = APIRouter(prefix="/chat-log", tags=["Chat Log"])
 
 
 # -----------------------------
-# 내부 헬퍼: 요약 텍스트 구성
+# 내부 헬퍼: 감정요약 컨텍스트 구성
+#  - 사용자 발화만 사용
+#  - 과도한 길이 방지(최근 N줄/최대 글자)
 # -----------------------------
 def _build_daily_text(pairs: List[dict]) -> str:
+    LINES = 40
+    CHARS = 6000
+
     lines = []
-    for p in pairs:
+    recent = pairs[-LINES:] if len(pairs) > LINES else pairs
+    for p in recent:
+        if p.get("sender") != "user":
+            continue
         ts = p["timestamp"].strftime("%H:%M") if isinstance(p.get("timestamp"), datetime) else ""
-        role = "내담자" if p.get("sender") == "user" else "상담봇"
-        msg = (p.get("message") or "").strip()
+        msg = (p.get("message") or "").replace("\r\n", "\n").replace("\r", "").strip()
         if msg:
-            lines.append(f"[{ts}] {role}: {msg}")
-    return "\n".join(lines)
+            lines.append(f"[{ts}] 내담자: {msg}")
+
+    joined = "\n".join(lines)
+    return joined[-CHARS:] if joined else ""
 
 
-# ✅ 추가: 모델이 길게/불릿으로 답해도 '정확히 3줄'만 남기는 후처리
+# ✅ 모델이 규칙을 어겨도 '정확히 3줄'만 남기는 후처리
 def _force_three_lines(text: str) -> str:
     s = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
 
-    # 줄 앞의 불릿/번호/라벨 제거
     def clean(ln: str) -> str:
+        # 줄 앞의 불릿/번호/라벨 제거
         ln = re.sub(r"^\s*(?:[-–—•*]|[0-9]+\.)\s*", "", ln)  # 불릿/번호
         ln = re.sub(
-            r"^(?:하루\s*요약|주요\s*주제(?:\s*키워드)?|감정\s*변화(?:/\s*패턴)?|위험\s*신호|권장\s*조치)\s*[:：]\s*",
+            r"^(?:요약|하루\s*요약|주요\s*주제(?:\s*키워드)?|감정\s*변화(?:/\s*패턴)?|위험\s*신호|권장\s*조치|분석)\s*[:：]\s*",
             "",
             ln,
             flags=re.I,
@@ -45,50 +55,52 @@ def _force_three_lines(text: str) -> str:
     if len(lines) >= 3:
         return "\n".join(lines[:3])
 
-    # 줄이 모자라면 문장 단위로 분리해 3개 채움
+    # 줄이 모자라면 문장 단위로 보정
     joined = " ".join(lines) if lines else s
     sentences = [clean(x) for x in re.split(r"(?<=[.!?。！？])\s+", joined) if x.strip()]
     if len(sentences) >= 3:
         return "\n".join(sentences[:3])
 
-    return "\n".join(sentences) if sentences else s
+    return "\n".join((sentences or lines)[:3])
 
 
 def _summarize_daily(text: str) -> str:
     if not text.strip():
         return "해당 날짜에 대화가 없습니다."
     try:
-        # ⬇️ 프롬프트를 '정확히 3줄, 불릿/라벨 금지'로 변경 + max_tokens 가드
         resp = openai.ChatCompletion.create(
             model="gpt-4o",
-            temperature=0.3,
-            max_tokens=300,
+            temperature=0.2,        # 사건요약으로 새는 걸 줄이기 위해 보수적으로
+            max_tokens=240,         # 장문 억제
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "역할: 상담 대화 하루 요약가\n"
-                        "규칙:\n"
-                        "- 한국어로 작성할 것\n"
-                        "- 반드시 줄바꿈 기준 '정확히 3줄'만 출력할 것\n"
-                        "- 각 줄은 1문장, 불릿/번호/제목/라벨/콜론 금지 (예: '-', '1.', '하루 요약:' 금지)\n"
-                        "예시:\n"
-                        "첫째 줄 요약 문장\n"
-                        "둘째 줄 요약 문장\n"
-                        "셋째 줄 요약 문장\n"
+                        "역할: 상담 대화 감정 요약가\n"
+                        "출력 형식: 줄바꿈 기준 정확히 3줄, 각 줄 1문장, 불릿/번호/제목/라벨/콜론/이모지 금지\n"
+                        "내용 규칙:\n"
+                        "- 사건/사실/조언/해결책 요약 금지, 감정(정서 톤/변화/촉발/욕구·자원)만 기술\n"
+                        "- 병명·진단 단정 금지, 도덕적 판단·명령형 표현 금지\n"
+                        "좋은 예(형식만):\n"
+                        "전반 정서는 ○○ 쪽으로 기울며 피로·긴장이 배경에 깔려 있습니다.\n"
+                        "특히 △△ 언급에서 감정 강도가 흔들려 □□가 촉발 요인으로 나타납니다.\n"
+                        "현재 필요한 것은 ▽▽(안정/정리/휴식 등)에 가깝고 스스로 인지한 자원은 ◇◇ 입니다.\n"
                     )
                 },
                 {
                     "role": "user",
                     "content": (
-                        "다음은 하루치 대화 로그입니다. 위 규칙을 지켜 정확히 3줄로만 요약하세요.\n\n"
+                        "다음은 하루치 대화 로그(사용자 발화만 추린 것)입니다.\n"
+                        "사실·사건 요약이 아니라 '감정 상태'만 3줄로 작성하세요.\n"
+                        "전반 정서 톤, 감정 변화/촉발 요인, 현재 필요/자원을 중심으로 하되,\n"
+                        "조언·해결책·계획·리캡은 쓰지 마세요. 정확히 3줄, 각 줄 1문장.\n\n"
                         f"{text}"
                     )
                 }
             ]
         )
         raw = resp["choices"][0]["message"]["content"].strip()
-        return _force_three_lines(raw)   # ⬅️ 항상 3줄로 정규화
+        return _force_three_lines(raw)
     except Exception as e:
         return f"요약 생성 중 오류가 발생했습니다: {e}"
 
@@ -202,6 +214,7 @@ async def summary_today(
         "count_messages": len(pairs),
         "summary": summary
     }
+
 
 @router.delete("/reset")
 async def reset_chat_logs(
