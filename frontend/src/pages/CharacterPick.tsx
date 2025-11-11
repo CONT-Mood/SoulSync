@@ -65,11 +65,11 @@ const CharacterPick: React.FC = () => {
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-6 shadow-lg">
           <span className="text-2xl font-bold text-white">S</span>
         </div>
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-8">
           당신의 친구를 선택하세요
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-          각기 다른 성격과 전문성을 가진 AI 친구들과 만나보세요.<br />
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-14">
+          각기 다른 성격과 전문성을 가진 AI 친구들을 만나보세요.<br />
           당신에게 가장 맞는 친구를 선택하여 대화를 시작해보세요.
         </p>
       </div>
@@ -91,7 +91,7 @@ const CharacterPick: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 mt-16 text-center">
+      <div className="relative z-10 mt-20 text-center">
         <div className="flex items-center justify-center space-x-3">
           <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-xs">S</span>

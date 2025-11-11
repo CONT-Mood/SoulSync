@@ -1,19 +1,14 @@
-// 화면/상태
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// 컴포넌트
 import ChatSidebar from '../components/ChatSidebar';
 import ChatHeader from '../components/ChatHeader';
 import ChatInput from '../components/ChatInput';
 import AnimatedImage from '../components/AnimatedImage';
-
-// 컨텍스트/에셋
 import { useCharacter } from '../contexts/CharacterContext';
 import character from '../assets/character_Main.png';
 
 const ChatMain = () => {
-  // 컨텍스트
+
   const { selectedCharacter } = useCharacter();
 
   // UI 상태
@@ -108,7 +103,7 @@ const ChatMain = () => {
   );
 
   // 텍스트 스타일
-  const bubbleTextStyle: React.CSSProperties = {
+  const chatTextStyle: React.CSSProperties = {
     color: '#0A1172',
     fontFamily: 'Segoe UI, Pretendard, Noto Sans KR, sans-serif',
     fontWeight: 500,
@@ -128,12 +123,22 @@ const ChatMain = () => {
 
       {/* 사이드바 */}
       {sidebarOpen && (
-        <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-[320px] z-40 bg-white border-r border-gray-200 shadow-xl overflow-y-auto">
-          <ChatSidebar onSelectChat={handleSelectChat} onClose={closeSidebar} />
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/10"
+            onClick={closeSidebar}
+            />
+        <aside className="fixed left-0 top-0 h-screen w-[320px] z-[60] bg-white border-r border-gray-200 shadow-xl overflow-y-auto">
+          <ChatSidebar
+            onSelectChat={handleSelectChat}
+            onClose={closeSidebar}
+            emotionScore={emotionScore}
+            />
         </aside>
+        </>
       )}
 
-      {/* 섹션 */}
+      {/* 메인 섹션 */}
       <section className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto px-6 mt-52 flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-10 w-full">
           {/* 캐릭터 */}
@@ -151,7 +156,7 @@ const ChatMain = () => {
             <div className="max-w-[640px] w-full bg-white rounded-[24px] shadow-[0_18px_50px_rgba(0,0,0,0.1)] border border-gray-100 px-6 py-5">
               <div
                 className="text-center text-[15px] md:text-base leading-relaxed whitespace-pre-wrap"
-                style={bubbleTextStyle}
+                style={chatTextStyle}
               >
                 {modelReply.split(/\n|\\n/).map((line, idx) => (
                   <p key={idx} className="mb-2 last:mb-0">
@@ -219,7 +224,7 @@ const ChatMain = () => {
         </div>
       )}
 
-      {/* 채팅 영역 */}
+      {/* 채팅 */}
       <div className="flex-1 flex flex-col bg-white">
         <div className="flex flex-col justify-between flex-1">
           <div className="flex-1" />
