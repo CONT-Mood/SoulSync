@@ -1,3 +1,4 @@
+# backend/app/routers/chat.py
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.chatbot.analyze_emotion import analyze_emotion
@@ -20,7 +21,48 @@ import re
 router = APIRouter(prefix="/chat", tags=["Chat"])
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# 엄격 모드에서만 쓰는 규칙 (유지: 필요 시 strict 활용)
+# -----------------------------
+# (추가) 파일 기반 전문 가이드 로더
+# -----------------------------
+from app.guides.loader import guidance_for  # guides/*.json 에서 구간별 텍스트 조회
+
+async def _get_latest_assessments(db, user_id: str) -> dict:
+    """유저 최신 설문 점수와 baseline 조회"""
+    doc = await db["users"].find_one(
+        {"user_id": user_id},
+        {"latest_assessments": 1, "baseline_scores": 1, "_id": 0}
+    ) or {}
+    return {
+        "latest": (doc.get("latest_assessments") or {}),
+        "baseline": (doc.get("baseline_scores") or {})
+    }
+
+def _compose_guide_prompt(latest: dict) -> str:
+    """설문 점수 기반 전문 가이드 문단 (짧게)"""
+    snippets = []
+    for atype, label in (("phq9","PHQ-9"), ("gad7","GAD-7"), ("pss","PSS"), ("mkpq16","mKPQ-16")):
+        if atype in latest:
+            total = latest[atype].get("raw")
+            g = guidance_for(atype, total)
+            if g:
+                band, text = g
+                snippets.append(f"[{label} · {band}] {text}")
+    if not snippets:
+        return ""
+    joined = "\n".join(f"- {s}" for s in snippets[:3])  # 과주입 방지: 최대 3개
+    return (
+        "\n\n[전문 가이드]\n"
+        f"{joined}\n"
+        "\n[상담 원칙]\n"
+        "- 아래 가이드는 참고자료이며, 진단/치료 지시가 아님.\n"
+        "- 불안/스트레스↑: 호흡·근이완·주의전환 등 단기전략 우선.\n"
+        "- 우울/무기력↑: 작은 과제/행동활성화/리듬 정돈 등 부담 낮은 제안.\n"
+        "- 공감적이고 간결하게(2–4문장) 답변."
+    )
+
+# -----------------------------
+# RAG 관련 규칙 (기존 유지)
+# -----------------------------
 RAG_STRICT_RULES = (
     "\n\nCRITICAL RAG RULES:\n"
     "- STRICTLY use ONLY the provided Context below.\n"
@@ -28,7 +70,6 @@ RAG_STRICT_RULES = (
     "- Always add 'Sources:' with (source p.page) citations at the end."
 )
 
-# auto 모드 가이드 (유지)
 RAG_SOFT_HINT = (
     "\n\nRAG HINTS:\n"
     "- If the provided Context is relevant, prefer using it and add 'Sources:' with (source p.page).\n"
@@ -72,33 +113,29 @@ async def chat_with_bot(
     kb_min_relevance: 상위 문서 조각의 거리 기준 (작을수록 유사). 0.2~0.35 사이에서 튜닝 권장.
     """
     try:
-        # 1) 감정 분석
+        # 1) 감정 분석 (게이지바용 실시간 값)
         emotion_score = analyze_emotion(chat_input.message)
 
         # 2) 과거 대화 (조금 여유 있게 10개)
         chats_list = await get_user_chats(db, chat_input.user_id, limit=10)
 
         # 2-1) DB 형태를 build_messages에서 쓰는 형식으로 변환
-        # chats 컬렉션에는 한 문서에 user_message / bot_reply가 같이 들어 있기 때문에
-        # 이를 sender/message 쌍의 리스트로 풀어서 전달해줘야 한다.
         history_pairs: List[Dict] = []
-        # get_user_chats는 최신순(desc)으로 가져오므로, 오래된 것부터 보이도록 역순 정렬
+        # get_user_chats는 최신순(desc) → 오래된 것부터 보이도록 역순
         for c in reversed(chats_list):
             ts = c.get("timestamp")
-            # 사용자 발화
             history_pairs.append({
                 "sender": "user",
                 "message": c.get("user_message"),
                 "timestamp": ts,
             })
-            # 봇 응답
             history_pairs.append({
                 "sender": "bot",
                 "message": c.get("bot_reply"),
                 "timestamp": ts,
             })
 
-        # 3) RAG 회수
+        # 3) RAG 회수 (기존 로직 유지)
         contexts: List[Dict] = []
         best_score = 999.0
         force_no_rag = looks_like_greeting(chat_input.message)
@@ -109,14 +146,14 @@ async def chat_with_bot(
                 best_score = float(hits[0].get("score", 999.0))
 
             if kb_mode == "strict":
-                # strict 모드: 컨텍스트를 무조건 사용 (없으면 '자료에 없음' 유도)
+                # strict: 컨텍스트를 무조건 사용 (없으면 '자료에 없음' 유도)
                 contexts = hits
             else:
-                # auto 모드: 충분히 유사할 때만 컨텍스트 사용
+                # auto: 충분히 유사할 때만 컨텍스트 사용
                 if hits and best_score <= kb_min_relevance:
                     contexts = hits
 
-        # 4) RAG 컨텍스트를 모델이 읽기 쉬운 형태로 가공
+        # 4) RAG 컨텍스트 가공 (기존)
         rag_contexts: List[Dict] = []
         for c in contexts:
             meta = c.get("metadata", {}) or {}
@@ -125,21 +162,34 @@ async def chat_with_bot(
                 "source": f"{meta.get('source', 'doc')} p.{meta.get('page', '?')}",
             })
 
+        # -----------------------------
+        # (추가) 설문 점수 기반 전문 가이드 주입
+        # -----------------------------
+        info = await _get_latest_assessments(db, chat_input.user_id)
+        guide_prompt = _compose_guide_prompt(info["latest"])
+
+        # 원본 사용자 메시지와 모델에 넘길 메시지를 분리 (DB 저장/로그에는 원본 유지)
+        orig_user_message = chat_input.message
+        combined_user_message = (
+            f"{orig_user_message}\n\n{guide_prompt}"
+            if guide_prompt else orig_user_message
+        )
+
         # 5) messages 생성 (사람처럼 2~3문장 + 캐릭터 말투 유지)
         messages = build_messages(
             character=chat_input.character,
-            user_message=chat_input.message,
+            user_message=combined_user_message,  # ⬅️ 모델에는 가이드 주입된 메시지
             history_pairs=history_pairs,
             rag_contexts=rag_contexts if rag_contexts else None,
         )
 
-        # 6) 캐릭터별 temperature 적용 (짧고 사람스러운 수렴)
+        # 6) 캐릭터별 temperature (기존)
         decode = get_persona_decode(chat_input.character)
         temperature = decode.get("temperature", 0.4)
         if kb_mode == "strict":
             temperature = min(temperature, 0.25)
 
-        # 7) 모델 호출
+        # 7) 모델 호출 (기존)
         completion = openai.ChatCompletion.create(
             model=model,
             messages=messages,
@@ -151,17 +201,17 @@ async def chat_with_bot(
         # ✅ 최종 안전망: 자기소개 제거
         bot_reply = strip_self_intro(bot_reply)
 
-        # 8) 저장
+        # 8) 저장 (원본 사용자 메시지를 저장!)
         chat_record = ChatDBModel(
             user_id=chat_input.user_id,
             character=chat_input.character,
-            user_message=chat_input.message,
+            user_message=orig_user_message,  # ⬅️ 원본
             bot_reply=bot_reply,
             emotion_score=emotion_score,
         )
         await save_chat(db, chat_record)
 
-        # 9) 응답 (기존 스키마 유지: reply + emotion_score)
+        # 9) 응답 (기존 스키마 유지)
         return {
             "reply": bot_reply,
             "emotion_score": emotion_score if chat_input.show_emotion_score else None,

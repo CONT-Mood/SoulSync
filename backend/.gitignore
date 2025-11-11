@@ -4,3 +4,5 @@
 chatbot_env/
 
 __pycache__/
+
+echo backend/data/chroma/

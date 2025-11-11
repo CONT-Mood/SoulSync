@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios"
 
 type MkpqResult = {
   range: string;
@@ -121,21 +122,33 @@ const MKPQ16: React.FC = () => {
     };
   };
 
-  const handleSubmit = () => {
-    const allAnswered = questions.every((q) => answers[q.id]);
-    if (!allAnswered) {
-      alert("모든 문항에 응답해 주세요.");
-      return;
-    }
+  const handleSubmit = async () => {
+  const allAnswered = questions.every((q) => answers[q.id]);
+  if (!allAnswered) {
+    alert("모든 문항에 응답해 주세요.");
+    return;
+  }
 
-    const total = questions.reduce((sum, q) => {
-      const selected = answers[q.id];
-      const value = scoreMap[selected] ?? 0;
-      return sum + value;
-    }, 0);
+  const total = questions.reduce((sum, q) => {
+    const selected = answers[q.id];
+    const value = scoreMap[selected] ?? 0;
+    return sum + value;
+  }, 0);
 
-    setScore(total);
-  };
+  setScore(total);
+
+  // ✅ 총점 서버에 전달 (백엔드: /assessment/submit)
+  try {
+    await axios.post("/assessment/submit", {
+      user_id: "testuser",   // 로그인 연동 시 실제 사용자 ID로 교체
+      type: "mkpq16", 
+      total: total
+    });
+    console.log("MKPQ-16 점수 서버 저장 완료");
+  } catch (error) {
+    console.error("서버 저장 오류:", error);
+  }
+};
 
   const result = score !== null ? getResult(score) : null;
 
