@@ -3,6 +3,10 @@
 # 가상환경 무시
 chatbot_env/
 
+# Python 캐시 파일들
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 echo backend/data/chroma/

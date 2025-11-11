@@ -114,14 +114,28 @@ const ChatMain = () => {
     const confirmReset = window.confirm('정말 모든 대화 내역을 초기화하시겠습니까?');
     if (!confirmReset) return;
 
-    // 로그인 기능 구현 시 요청 주소 수정 필요
-    await fetch(`${import.meta.env.VITE_API_BASE}/chat-log/reset?user_id=testuser`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const base = import.meta.env.VITE_API_BASE;
+    const userId = 'testuser'; // 로그인 연동 시 실제 user_id로 교체
 
-    alert('모든 대화 내역이 초기화되었습니다.');
-    navigate('/pick');
+    try {
+      // 채팅 로그 + 진단 결과를 병렬로 초기화
+      await Promise.all([
+        fetch(`${base}/chat-log/reset?user_id=${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        fetch(`${base}/assessment/reset?user_id=${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ]);
+
+      alert('모든 대화 내역이 초기화되었습니다.');
+      navigate('/pick');
+    } catch (e) {
+      console.error('초기화 중 오류:', e);
+      alert('초기화 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    }
   }, [navigate]);
 
 
