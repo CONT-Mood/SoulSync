@@ -15,6 +15,7 @@ from app.rag.store import query_similar  # RAG 검색
 
 import os
 import openai
+import asyncio  # ⭐ 병렬 실행을 위한 asyncio 추가
 from typing import Literal, List, Dict, Optional
 import re
 
@@ -25,6 +26,33 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # (추가) 파일 기반 전문 가이드 로더
 # -----------------------------
 from app.guides.loader import guidance_for  # guides/*.json 에서 구간별 텍스트 조회
+
+# 필요한 경우에만 rag 수행
+def should_use_rag(text: str) -> bool:
+    """일반 잡담/감정 나눔 vs 자료/근거 질문 구분용 간단 휴리스틱"""
+    t = (text or "").strip()
+    if not t:
+        return False
+
+    # 아주 짧은 인사 / 자기소개는 RAG 불필요
+    if looks_like_greeting(t):
+        return False
+    if len(t) < 25:
+        return False
+
+    # 자료/근거/논문 관련 키워드
+    keywords = ["논문", "연구", "자료", "근거", "출처", "통계", "데이터", "문헌", "증거"]
+    if any(k in t for k in keywords):
+        return True
+
+    # 구체적인 질문 느낌 (물음표, 왜/어떻게/무엇 등)
+    question_words = ["?", "왜", "어떻게", "무엇", "뭐가", "알려줘"]
+    if any(q in t for q in question_words):
+        return True
+
+    # 나머지는 기본적으로 RAG 안 씀
+    return False
+
 
 async def _get_latest_assessments(db, user_id: str) -> dict:
     """유저 최신 설문 점수와 baseline 조회"""
@@ -37,10 +65,11 @@ async def _get_latest_assessments(db, user_id: str) -> dict:
         "baseline": (doc.get("baseline_scores") or {})
     }
 
+
 def _compose_guide_prompt(latest: dict) -> str:
     """설문 점수 기반 전문 가이드 문단 (짧게)"""
     snippets = []
-    for atype, label in (("phq9","PHQ-9"), ("gad7","GAD-7"), ("pss","PSS"), ("mkpq16","mKPQ-16")):
+    for atype, label in (("phq9", "PHQ-9"), ("gad7", "GAD-7"), ("pss", "PSS"), ("mkpq16", "mKPQ-16")):
         if atype in latest:
             total = latest[atype].get("raw")
             g = guidance_for(atype, total)
@@ -83,9 +112,11 @@ SELF_NAME_RE = re.compile(
     re.MULTILINE,
 )
 
+
 def strip_self_intro(text: str) -> str:
     """사람 이름 자기소개를 모두 상담봇으로 치환"""
     return SELF_NAME_RE.sub("저는 상담봇 SoulSync입니다.", text)
+
 
 def looks_like_greeting(text: str) -> bool:
     """인사/자기소개로 보이는 짧은 메시지 감지"""
@@ -113,8 +144,14 @@ async def chat_with_bot(
     kb_min_relevance: 상위 문서 조각의 거리 기준 (작을수록 유사). 0.2~0.35 사이에서 튜닝 권장.
     """
     try:
-        # 1) 감정 분석 (게이지바용 실시간 값)
-        emotion_score = analyze_emotion(chat_input.message)
+        # 1) 감정 분석을 백그라운드 스레드에서 실행
+        #    → 이 작업이 도는 동안 아래에서 과거 대화 조회 / RAG / 답변 생성까지 진행
+        loop = asyncio.get_running_loop()
+        emotion_task = loop.run_in_executor(
+            None,                 # 기본 ThreadPoolExecutor 사용
+            analyze_emotion,      # 동기 함수
+            chat_input.message,   # 인자
+        )
 
         # 2) 과거 대화 (조금 여유 있게 10개)
         chats_list = await get_user_chats(db, chat_input.user_id, limit=10)
@@ -135,12 +172,19 @@ async def chat_with_bot(
                 "timestamp": ts,
             })
 
-        # 3) RAG 회수 (기존 로직 유지)
+        # 3) RAG 회수
         contexts: List[Dict] = []
         best_score = 999.0
-        force_no_rag = looks_like_greeting(chat_input.message)
 
-        if kb_mode in ("auto", "strict") and not force_no_rag:
+        # ⭐ RAG 실제 사용 여부 결정
+        use_rag = False
+        if kb_mode == "strict":
+            # strict 모드는 RAG 전용이라 그대로 유지
+            use_rag = True
+        elif kb_mode == "auto":
+            use_rag = should_use_rag(chat_input.message)
+
+        if use_rag:
             hits = query_similar(chat_input.message, top_k=top_k) or []
             if hits:
                 best_score = float(hits[0].get("score", 999.0))
@@ -153,14 +197,17 @@ async def chat_with_bot(
                 if hits and best_score <= kb_min_relevance:
                     contexts = hits
 
-        # 4) RAG 컨텍스트 가공 (기존)
+        # 4) RAG 컨텍스트 가공 (기존 로직 그대로)
         rag_contexts: List[Dict] = []
         for c in contexts:
             meta = c.get("metadata", {}) or {}
-            rag_contexts.append({
-                "text": c.get("text", ""),
-                "source": f"{meta.get('source', 'doc')} p.{meta.get('page', '?')}",
-            })
+            rag_contexts.append(
+                {
+                    "text": c.get("text", ""),
+                    "source": f"{meta.get('source', 'doc')} p.{meta.get('page', '?')}",
+                }
+            )
+
 
         # -----------------------------
         # (추가) 설문 점수 기반 전문 가이드 주입
@@ -195,11 +242,15 @@ async def chat_with_bot(
             messages=messages,
             temperature=temperature,
             top_p=1,
+            max_tokens=320, # 응답 속도 개선 위해 토큰 수 제한
         )
         bot_reply = completion["choices"][0]["message"]["content"].strip()
 
         # ✅ 최종 안전망: 자기소개 제거
         bot_reply = strip_self_intro(bot_reply)
+
+        # 7-1) 위에서 돌려놓은 감정 분석 결과 수신
+        emotion_score = await emotion_task
 
         # 8) 저장 (원본 사용자 메시지를 저장!)
         chat_record = ChatDBModel(

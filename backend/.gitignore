@@ -10,3 +10,7 @@ __pycache__/
 *.pyd
 
 echo backend/data/chroma/
+
+# Chroma vector store
+chroma/
+**/chroma/
