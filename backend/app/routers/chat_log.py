@@ -6,17 +6,17 @@ from datetime import datetime
 from app.crud import chat
 from app.db.mongo import get_database
 
-# OpenAI
-import os, openai, re
+import os
+import openai
+import re
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 router = APIRouter(prefix="/chat-log", tags=["Chat Log"])
 
 
 # -----------------------------
-# 내부 헬퍼: 감정요약 컨텍스트 구성
-#  - 사용자 발화만 사용
-#  - 과도한 길이 방지(최근 N줄/최대 글자)
+# 내부 헬퍼: 하루치 사용자 발화 텍스트 구성
 # -----------------------------
 def _build_daily_text(pairs: List[dict]) -> str:
     LINES = 40
@@ -27,7 +27,11 @@ def _build_daily_text(pairs: List[dict]) -> str:
     for p in recent:
         if p.get("sender") != "user":
             continue
-        ts = p["timestamp"].strftime("%H:%M") if isinstance(p.get("timestamp"), datetime) else ""
+        ts = (
+            p["timestamp"].strftime("%H:%M")
+            if isinstance(p.get("timestamp"), datetime)
+            else ""
+        )
         msg = (p.get("message") or "").replace("\r\n", "\n").replace("\r", "").strip()
         if msg:
             lines.append(f"[{ts}] 내담자: {msg}")
@@ -36,15 +40,14 @@ def _build_daily_text(pairs: List[dict]) -> str:
     return joined[-CHARS:] if joined else ""
 
 
-# ✅ 모델이 규칙을 어겨도 '정확히 3줄'만 남기는 후처리
-def _force_three_lines(text: str) -> str:
+# ✅ 최대 3줄까지만 자연스럽게 정리
+def _force_three_lines(text: str, max_lines: int = 3) -> str:
     s = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
 
     def clean(ln: str) -> str:
-        # 줄 앞의 불릿/번호/라벨 제거
-        ln = re.sub(r"^\s*(?:[-–—•*]|[0-9]+\.)\s*", "", ln)  # 불릿/번호
+        ln = re.sub(r"^\s*(?:[-–—•*]|[0-9]+\.)\s*", "", ln)  # 불릿/번호 제거
         ln = re.sub(
-            r"^(?:요약|하루\s*요약|주요\s*주제(?:\s*키워드)?|감정\s*변화(?:/\s*패턴)?|위험\s*신호|권장\s*조치|분석)\s*[:：]\s*",
+            r"^(?:요약|하루\s*요약|주요\s*주제|감정\s*변화|위험\s*신호|분석)\s*[:：]\s*",
             "",
             ln,
             flags=re.I,
@@ -52,52 +55,56 @@ def _force_three_lines(text: str) -> str:
         return ln.strip()
 
     lines = [clean(ln) for ln in s.split("\n") if ln.strip()]
-    if len(lines) >= 3:
-        return "\n".join(lines[:3])
+    if lines:
+        if len(lines) > max_lines:
+            return "\n".join(lines[:max_lines])
+        return "\n".join(lines)
 
-    # 줄이 모자라면 문장 단위로 보정
-    joined = " ".join(lines) if lines else s
-    sentences = [clean(x) for x in re.split(r"(?<=[.!?。！？])\s+", joined) if x.strip()]
-    if len(sentences) >= 3:
-        return "\n".join(sentences[:3])
+    sentences = [clean(x) for x in re.split(r"(?<=[.!?。！？])\s+", s) if x.strip()]
+    if sentences:
+        return "\n".join(sentences[:max_lines])
 
-    return "\n".join((sentences or lines)[:3])
+    return ""
 
 
+# -----------------------------
+# 하루 감정 요약 생성
+# -----------------------------
 def _summarize_daily(text: str) -> str:
     if not text.strip():
         return "해당 날짜에 대화가 없습니다."
+
     try:
         resp = openai.ChatCompletion.create(
             model="gpt-4o",
-            temperature=0.2,        # 사건요약으로 새는 걸 줄이기 위해 보수적으로
-            max_tokens=240,         # 장문 억제
+            temperature=0.25,
+            max_tokens=240,
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "역할: 상담 대화 감정 요약가\n"
-                        "출력 형식: 줄바꿈 기준 정확히 3줄, 각 줄 1문장, 불릿/번호/제목/라벨/콜론/이모지 금지\n"
-                        "내용 규칙:\n"
-                        "- 사건/사실/조언/해결책 요약 금지, 감정(정서 톤/변화/촉발/욕구·자원)만 기술\n"
-                        "- 병명·진단 단정 금지, 도덕적 판단·명령형 표현 금지\n"
-                        "좋은 예(형식만):\n"
-                        "전반 정서는 ○○ 쪽으로 기울며 피로·긴장이 배경에 깔려 있습니다.\n"
-                        "특히 △△ 언급에서 감정 강도가 흔들려 □□가 촉발 요인으로 나타납니다.\n"
-                        "현재 필요한 것은 ▽▽(안정/정리/휴식 등)에 가깝고 스스로 인지한 자원은 ◇◇ 입니다.\n"
-                    )
+                        "너는 하루 동안의 상담 대화 내용을 바탕으로, "
+                        "사용자의 전반적인 감정 상태를 자연스럽게 요약하는 한국어 요약가야.\n"
+                        "규칙:\n"
+                        "- 대화 속에서 실제로 드러난 감정 표현, 분위기, 에너지의 흐름만 관찰해라.\n"
+                        "- 사용자가 직접 언급하지 않은 내면의 문제나 진단(예: 정체성 혼란, 트라우마 등)은 추측하지 마라.\n"
+                        "- 감정 표현이 거의 없거나 단순한 정보 대화일 경우에는 "
+                        "억지로 감정을 만들어내지 말고, 차분하고 안정적인 하루로 자연스럽게 해석해라.\n"
+                        "- 조언, 위로, 평가, 해석, 진단, 계획 문장은 포함하지 마라.\n"
+                        "- 한국어로 2~3개의 짧은 문장으로 자연스럽게 작성하고, 문장 사이에는 줄바꿈을 사용해라.\n"
+                        "- 불릿, 번호, 제목, 괄호, 따옴표, 이모지는 쓰지 마라."
+                    ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        "다음은 하루치 대화 로그(사용자 발화만 추린 것)입니다.\n"
-                        "사실·사건 요약이 아니라 '감정 상태'만 3줄로 작성하세요.\n"
-                        "전반 정서 톤, 감정 변화/촉발 요인, 현재 필요/자원을 중심으로 하되,\n"
-                        "조언·해결책·계획·리캡은 쓰지 마세요. 정확히 3줄, 각 줄 1문장.\n\n"
+                        "아래는 하루 동안 사용자가 챗봇과 나눈 대화 중 사용자 발화만 모은 것이다.\n"
+                        "이 내용을 토대로 사용자의 하루 감정 상태를 2~3개의 짧은 문장으로 요약해라.\n"
+                        "감정이 거의 드러나지 않는다면 전반적으로 평온하거나 안정된 하루로 묘사해라.\n\n"
                         f"{text}"
-                    )
-                }
-            ]
+                    ),
+                },
+            ],
         )
         raw = resp["choices"][0]["message"]["content"].strip()
         return _force_three_lines(raw)
@@ -111,21 +118,24 @@ def _summarize_daily(text: str) -> str:
 @router.get("/dates", response_model=List[str])
 async def get_chat_dates(
     user_id: str = Query(...),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     chats_list = await chat.get_user_chats(db, user_id)
-    dates = sorted({c["timestamp"].strftime("%Y-%m-%d") for c in chats_list}, reverse=True)
+    dates = sorted(
+        {c["timestamp"].strftime("%Y-%m-%d") for c in chats_list},
+        reverse=True,
+    )
     return dates
 
 
 # ---------------------------------------------------------
-# 2) 특정 날짜의 전체 대화 (시간순 정렬)  ※ 경로 충돌 방지 → /by-date/{date}
+# 2) 특정 날짜의 전체 대화 (시간순 정렬)
 # ---------------------------------------------------------
 @router.get("/by-date/{date}")
 async def get_chats_by_date(
     date: str,
     user_id: str = Query(...),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     chats_list = await chat.get_user_chats(db, user_id)
     results = []
@@ -133,33 +143,34 @@ async def get_chats_by_date(
     for c in chats_list:
         chat_date = c["timestamp"].strftime("%Y-%m-%d")
         if chat_date == date:
-            results.append({
-                "sender": "user",
-                "message": c.get("user_message"),
-                "timestamp": c["timestamp"]
-            })
-            results.append({
-                "sender": "bot",
-                "message": c.get("bot_reply"),
-                "timestamp": c["timestamp"]
-            })
+            results.append(
+                {
+                    "sender": "user",
+                    "message": c.get("user_message"),
+                    "timestamp": c["timestamp"],
+                }
+            )
+            results.append(
+                {
+                    "sender": "bot",
+                    "message": c.get("bot_reply"),
+                    "timestamp": c["timestamp"],
+                }
+            )
 
     results.sort(key=lambda x: x["timestamp"])
 
-    return {
-        "date": date,
-        "messages": results
-    }
+    return {"date": date, "messages": results}
 
 
 # ---------------------------------------
-# 3) 특정 날짜 전체 대화 요약 (YYYY-MM-DD)
+# 3) 특정 날짜 전체 대화 요약
 # ---------------------------------------
 @router.get("/summary-by-date")
 async def summary_by_date(
     date: str = Query(..., description="YYYY-MM-DD"),
     user_id: str = Query(...),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     raw = await get_chats_by_date(date=date, user_id=user_id, db=db)
     pairs = raw["messages"]
@@ -172,35 +183,39 @@ async def summary_by_date(
         "user_id": user_id,
         "date": date,
         "count_messages": len(pairs),
-        "summary": summary
+        "summary": summary,
     }
 
 
 # ---------------------------------------
-# 4) 오늘 하루 전체 대화 요약 (서버 날짜 기준)
+# 4) 오늘 하루 전체 대화 요약
 # ---------------------------------------
 @router.get("/summary-today")
 async def summary_today(
     user_id: str = Query(...),
-    db: AsyncIOMotorDatabase = Depends(get_database)
+    db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     today_str = datetime.now().strftime("%Y-%m-%d")
 
     chats_list = await chat.get_user_chats(db, user_id)
-    pairs = []
+    pairs: List[dict] = []
     for c in chats_list:
         chat_date = c["timestamp"].strftime("%Y-%m-%d")
         if chat_date == today_str:
-            pairs.append({
-                "sender": "user",
-                "message": c.get("user_message"),
-                "timestamp": c["timestamp"]
-            })
-            pairs.append({
-                "sender": "bot",
-                "message": c.get("bot_reply"),
-                "timestamp": c["timestamp"]
-            })
+            pairs.append(
+                {
+                    "sender": "user",
+                    "message": c.get("user_message"),
+                    "timestamp": c["timestamp"],
+                }
+            )
+            pairs.append(
+                {
+                    "sender": "bot",
+                    "message": c.get("bot_reply"),
+                    "timestamp": c["timestamp"],
+                }
+            )
 
     pairs.sort(key=lambda x: x["timestamp"])
 
@@ -212,17 +227,17 @@ async def summary_today(
         "user_id": user_id,
         "date": today_str,
         "count_messages": len(pairs),
-        "summary": summary
+        "summary": summary,
     }
 
 
+# ---------------------------------------
+# 5) 모든 대화 초기화
+# ---------------------------------------
 @router.delete("/reset")
 async def reset_chat_logs(
     user_id: str = Query(...),
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
     await chat.delete_user_chats(db, user_id)
-    return {
-        "ok": True,
-        "message": "All chat logs deleted"
-    }
+    return {"ok": True, "message": "All chat logs deleted"}
