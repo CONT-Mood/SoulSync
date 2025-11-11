@@ -111,9 +111,6 @@ const ChatMain = () => {
 
   // (초기화 기능 넣어주세요 -> 혜련님)
   const handleFloatingAction = useCallback(async () => {
-    const confirmReset = window.confirm('정말 모든 대화 내역을 초기화하시겠습니까?');
-    if (!confirmReset) return;
-
     const base = import.meta.env.VITE_API_BASE;
     const userId = 'testuser'; // 로그인 연동 시 실제 user_id로 교체
 
@@ -129,8 +126,6 @@ const ChatMain = () => {
           headers: { 'Content-Type': 'application/json' },
         }),
       ]);
-
-      alert('모든 대화 내역이 초기화되었습니다.');
       navigate('/pick');
     } catch (e) {
       console.error('초기화 중 오류:', e);
