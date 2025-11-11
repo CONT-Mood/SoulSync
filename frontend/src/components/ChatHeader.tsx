@@ -18,7 +18,7 @@ const ChatHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
 
       <div className="flex items-center space-x-2">
         <div className="relative">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
             <span className="text-white font-bold text-sm">S</span>
           </div>
           <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border border-white"></div>
@@ -27,7 +27,7 @@ const ChatHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
           <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             SoulSync
           </h1>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-gray-600 font-medium">
             {selectedCharacter?.name || 'AI 상담사'}
           </p>
         </div>
@@ -36,7 +36,7 @@ const ChatHeader = ({ onToggleSidebar }: { onToggleSidebar: () => void }) => {
       <div className="space-x-2">
         <button
           onClick={() => navigate("/diagnosis")}
-          className="px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-xs font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
+          className="px-5 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-xs font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-300/60"
         >
           진단하기
         </button>
