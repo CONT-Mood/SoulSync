@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 type PhqResult = {
   range: string;
@@ -10,6 +11,8 @@ type PhqResult = {
 const PHQ9: React.FC = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [score, setScore] = useState<number | null>(null);
+
+  const navigate = useNavigate();
 
   const questions = [
     { id: 1, text: "기분이 가라앉거나, 우울하거나, 희망이 없다고 느꼈다." },
@@ -120,6 +123,16 @@ const PHQ9: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 via-white to-purple-100 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl bg-white/90 backdrop-blur rounded-3xl shadow-xl border border-white/60 px-6 py-8 sm:px-10 sm:py-10">
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => navigate("/chat")} // ✅ 버튼 클릭 시 /chat으로 이동
+            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs sm:text-sm text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition"
+          >
+            <span className="text-base">←</span>
+            <span>채팅 화면으로 돌아가기</span>
+          </button>
+        </div>
         <header className="mb-6 sm:mb-8">
           <p className="text-s font-semibold text-indigo-500 uppercase tracking-[0.25em]">
             PHQ-9
