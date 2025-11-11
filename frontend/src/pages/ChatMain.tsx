@@ -110,9 +110,20 @@ const ChatMain = () => {
   };
 
   // (초기화 기능 넣어주세요 -> 혜련님)
-  const handleFloatingAction = useCallback(() => {
-    console.log('Floating action button clicked');
-  }, []);
+  const handleFloatingAction = useCallback(async () => {
+    const confirmReset = window.confirm('정말 모든 대화 내역을 초기화하시겠습니까?');
+    if (!confirmReset) return;
+
+    // 로그인 기능 구현 시 요청 주소 수정 필요
+    await fetch(`${import.meta.env.VITE_API_BASE}/chat-log/reset?user_id=testuser`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    alert('모든 대화 내역이 초기화되었습니다.');
+    navigate('/pick');
+  }, [navigate]);
+
 
   return (
     <div className="min-h-screen w-full bg-white text-black flex flex-col overflow-hidden">

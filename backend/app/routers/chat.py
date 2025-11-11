@@ -51,6 +51,7 @@ def looks_like_greeting(text: str) -> bool:
     t = (text or "").strip()
     return (len(t) <= 30) and any(x in t for x in ["안녕", "반가", "처음", "누구", "소개", "이름"])
 
+
 @router.post("/", response_model=ChatResponse)
 async def chat_with_bot(
     chat_input: ChatRequest,
@@ -75,19 +76,43 @@ async def chat_with_bot(
         emotion_score = analyze_emotion(chat_input.message)
 
         # 2) 과거 대화 (조금 여유 있게 10개)
-        past_chats = await get_user_chats(db, chat_input.user_id, limit=10)
+        chats_list = await get_user_chats(db, chat_input.user_id, limit=10)
+
+        # 2-1) DB 형태를 build_messages에서 쓰는 형식으로 변환
+        # chats 컬렉션에는 한 문서에 user_message / bot_reply가 같이 들어 있기 때문에
+        # 이를 sender/message 쌍의 리스트로 풀어서 전달해줘야 한다.
+        history_pairs: List[Dict] = []
+        # get_user_chats는 최신순(desc)으로 가져오므로, 오래된 것부터 보이도록 역순 정렬
+        for c in reversed(chats_list):
+            ts = c.get("timestamp")
+            # 사용자 발화
+            history_pairs.append({
+                "sender": "user",
+                "message": c.get("user_message"),
+                "timestamp": ts,
+            })
+            # 봇 응답
+            history_pairs.append({
+                "sender": "bot",
+                "message": c.get("bot_reply"),
+                "timestamp": ts,
+            })
 
         # 3) RAG 회수
-        contexts = []
+        contexts: List[Dict] = []
         best_score = 999.0
         force_no_rag = looks_like_greeting(chat_input.message)
+
         if kb_mode in ("auto", "strict") and not force_no_rag:
             hits = query_similar(chat_input.message, top_k=top_k) or []
             if hits:
                 best_score = float(hits[0].get("score", 999.0))
+
             if kb_mode == "strict":
+                # strict 모드: 컨텍스트를 무조건 사용 (없으면 '자료에 없음' 유도)
                 contexts = hits
-            else:  # auto
+            else:
+                # auto 모드: 충분히 유사할 때만 컨텍스트 사용
                 if hits and best_score <= kb_min_relevance:
                     contexts = hits
 
@@ -104,7 +129,7 @@ async def chat_with_bot(
         messages = build_messages(
             character=chat_input.character,
             user_message=chat_input.message,
-            history_pairs=past_chats,
+            history_pairs=history_pairs,
             rag_contexts=rag_contexts if rag_contexts else None,
         )
 

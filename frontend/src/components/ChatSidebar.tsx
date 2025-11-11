@@ -223,18 +223,18 @@ const ChatSidebar = ({ onClose, emotionScore }: ChatSidebarProps) => {
           className="w-full flex items-center justify-between bg-indigo-50 hover:bg-indigo-100 transition-colors rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-300/80"
         >
           <span className="text-sm font-semibold text-indigo-800">
-            {selectedDate ? `${getDateString(selectedDate)} 요약` : "요약"}
+            {selectedDate ? `${getDateString(selectedDate)} 분석` : "감정 분석"}
           </span>
         </button>
 
         {summaryOpen && (
           <div className="mt-2 mb-2 bg-gray-50 rounded-xl p-3 text-sm text-gray-700 border border-gray-200">
             {summaryLoading ? (
-              <span className="text-gray-500">요약 불러오는 중…</span>
+              <span className="text-gray-500">감정 분석 중…</span>
             ) : summary ? (
               <p className="whitespace-pre-wrap leading-relaxed">{summary}</p>
             ) : (
-              <span className="text-gray-400">이 날짜에는 요약이 없습니다.</span>
+              <span className="text-gray-400">이 날짜에는 감정 분석 가능 내역이 없습니다.</span>
             )}
           </div>
         )}

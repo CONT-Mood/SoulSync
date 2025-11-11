@@ -5,3 +5,8 @@ openai==0.28.1
 pydantic
 motor
 firebase_admin
+# 추가
+chromadb
+PyPDF2
+pypdf
+python-multipart
