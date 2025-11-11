@@ -6,65 +6,44 @@ import type { ChatPair } from "../api/chatLog";
 const dateTabLabel = (d: string) =>
   new Date(d).toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
 
-const timeLabel = (ts: string) => {
-  const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-};
-
-const ChatLog = () => {
-  // ✅ userId 가져오기 (프로젝트 규칙에 맞게 교체 가능)
+export default function ChatLog() {
   const userId =
     (typeof window !== "undefined" && localStorage.getItem("user_id")) || "testuser";
 
-  // 날짜 목록 + 선택일
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  // 선택일의 메시지
   const [messages, setMessages] = useState<ChatPair[]>([]);
-
-  // 로딩 상태
   const [loadingDates, setLoadingDates] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
 
   const todayStr = useMemo(() => {
     const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
   }, []);
 
-  // 1) 날짜 목록 로드
+  // 1) 날짜 목록
   useEffect(() => {
     let mounted = true;
     setLoadingDates(true);
     (async () => {
       try {
-        const list = await getChatDates(userId); // ["YYYY-MM-DD", ...]
+        const list = await getChatDates(userId);
         if (!mounted) return;
         const sorted = [...list].sort((a, b) => +new Date(b) - +new Date(a));
         setDates(sorted);
         setSelectedDate(sorted.includes(todayStr) ? todayStr : sorted[0] ?? null);
-      } catch (e) {
-        console.error("getChatDates error:", e);
-        setDates([]);
-        setSelectedDate(null);
       } finally {
-        if (mounted) setLoadingDates(false);
+        mounted && setLoadingDates(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [userId, todayStr]);
 
-  // 2) 선택일 메시지 로드
+  // 2) 선택일 메시지
   useEffect(() => {
-    if (!selectedDate) {
-      setMessages([]);
-      return;
-    }
+    if (!selectedDate) return setMessages([]);
     let mounted = true;
     setLoadingMsgs(true);
     (async () => {
@@ -72,72 +51,93 @@ const ChatLog = () => {
         const data = await getChatsByDate(userId, selectedDate);
         if (!mounted) return;
         setMessages(data.messages || []);
-      } catch (e) {
-        console.error("getChatsByDate error:", e);
-        if (!mounted) return;
-        setMessages([]);
       } finally {
-        if (mounted) setLoadingMsgs(false);
+        mounted && setLoadingMsgs(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [userId, selectedDate]);
 
   return (
-    <div className="w-full h-screen bg-white p-6 overflow-y-auto">
-      {/* 날짜 탭 */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex flex-wrap gap-2">
-          {loadingDates ? (
-            <span className="text-gray-500 text-sm">날짜 불러오는 중…</span>
-          ) : dates.length ? (
-            dates.map((d) => (
-              <button
-                key={d}
-                onClick={() => setSelectedDate(d)}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  selectedDate === d
-                    ? "bg-blue-100 text-blue-700 font-semibold"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {dateTabLabel(d)}
-              </button>
-            ))
+    <div className="w-full h-screen overflow-y-auto
+      bg-gradient-to-b from-indigo-50 via-white to-white p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* 날짜 탭 */}
+        <div className="mb-3">
+          <div className="flex flex-wrap gap-2">
+            {loadingDates ? (
+              <span className="text-slate-500 text-sm">날짜 불러오는 중…</span>
+            ) : dates.length ? (
+              dates.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDate(d)}
+                  className={`px-3 py-1.5 rounded-xl text-sm transition-all shadow-sm
+                    ${selectedDate === d
+                      ? "bg-violet-100 text-violet-700 ring-1 ring-violet-200"
+                      : "bg-white text-slate-700 hover:bg-slate-50 ring-1 ring-slate-200"}`}
+                >
+                  {dateTabLabel(d)}
+                </button>
+              ))
+            ) : (
+              <span className="text-slate-400 text-sm">저장된 날짜가 없습니다.</span>
+            )}
+          </div>
+        </div>
+
+        {/* 날짜/대화 구분선 */}
+        <div className="relative mb-6">
+          {/* 가운데 날짜 칩 */}
+          {selectedDate && (
+            <div className="absolute inset-x-0 -top-3 flex justify-center">
+              <span className="px-3 py-1 rounded-full text-xs font-medium
+                bg-white text-violet-700 ring-1 ring-violet-200 shadow-sm">
+                {dateTabLabel(selectedDate)}
+              </span>
+            </div>
+          )}
+          {/* 선 */}
+          <div className="h-[2px] w-full rounded-full bg-gradient-to-r
+              from-indigo-400/60 via-indigo-300/40 to-indigo-400/60"></div>
+        </div>
+
+        {/* 메시지 리스트 */}
+        <div className="space-y-6"> {/* ⬅️ 간격 더 넓게 */}
+          {loadingMsgs ? (
+            <div className="text-center text-slate-500">대화를 불러오는 중…</div>
+          ) : messages.length ? (
+            messages.map((msg, i) => {
+              const isUser = msg.sender === "user";
+              return (
+                <div
+                  key={`${msg.timestamp || i}-${i}`}
+                  className={`flex ${isUser ? "justify-start" : "justify-end"} px-4`} // ⬅️ 좌우 여유 폭
+                >
+                  <div className={`max-w-[86%] ${isUser ? "items-start" : "items-end"} flex flex-col`}> {/* ⬅️ 더 넓게 */}
+                    <div
+                      className={[
+                        // 말풍선 자체 크게: 폰트/패딩/라인간격 업
+                        "px-5 py-3 rounded-2xl text-[16px] leading-7 whitespace-pre-wrap break-words select-text",
+                        // 공통 윤곽/그림자
+                        "ring-1 shadow-[0_14px_30px_-18px_rgba(99,102,241,0.4)]",
+                        isUser
+                          ? "bg-gradient-to-b from-violet-400/95 to-indigo-500/95 text-white ring-indigo-500/30"
+                          : "bg-white text-slate-900 ring-slate-200"
+                      ].join(" ")}
+                    >
+                      {msg.message}
+                    </div>
+                    {/* ⛔ 시간 표기 제거 (요청사항) */}
+                  </div>
+                </div>
+              );
+            })
           ) : (
-            <span className="text-gray-400 text-sm">저장된 날짜가 없습니다.</span>
+            <div className="text-center text-slate-400">이 날짜의 대화가 없습니다.</div>
           )}
         </div>
       </div>
-
-      {/* 메시지 리스트 (현재 화면 스타일 최대한 유지) */}
-      <div className="max-w-2xl mx-auto space-y-4">
-        {loadingMsgs ? (
-          <div className="text-center text-gray-500">대화를 불러오는 중…</div>
-        ) : messages.length ? (
-          messages.map((msg, i) => (
-            <div
-              key={`${msg.timestamp}-${i}`}
-              className={`flex ${msg.sender === "user" ? "justify-start" : "justify-end"}`}
-            >
-              <div
-                className={`px-4 py-2 rounded-lg max-w-[70%] ${
-                  msg.sender === "user" ? "bg-gray-500 text-white" : "bg-gray-300 text-black"
-                }`}
-                title={timeLabel(msg.timestamp)}
-              >
-                {msg.message}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-center text-gray-400">이 날짜의 대화가 없습니다.</div>
-        )}
-      </div>
     </div>
   );
-};
-
-export default ChatLog;
+}
