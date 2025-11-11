@@ -90,19 +90,16 @@ html, body, #root {
 @tailwind components;
 @tailwind utilities;
 
-/* 브라우저 기본 비밀번호 표시 버튼 숨기기 */
 input[type="password"]::-webkit-credentials-auto-fill-button,
 input[type="password"]::-webkit-credentials-auto-fill-button:hover {
   display: none !important;
 }
 
-/* Firefox에서 비밀번호 표시 버튼 숨기기 */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none !important;
 }
 
-/* 비밀번호 표시 버튼 스타일 제거 */
 .password-toggle-btn {
   outline: none !important;
   border: none !important;
@@ -119,7 +116,6 @@ input[type="password"]::-ms-clear {
   box-shadow: none !important;
 }
 
-/* 캐릭터 선택 애니메이션 */
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -136,7 +132,6 @@ input[type="password"]::-ms-clear {
   opacity: 0;
 }
 
-/* 텍스트 줄 제한 */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -144,12 +139,11 @@ input[type="password"]::-ms-clear {
   overflow: hidden;
 }
 
-/* 스크롤바 숨기기 */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;
 }
