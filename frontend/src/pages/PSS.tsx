@@ -60,14 +60,14 @@ const PSS: React.FC = () => {
     },
   ];
 
-  const options = ["전혀없음", "거의없음", "때때로있음", "자주있음", "매우자주"];
+  const options = ["전혀 없음", "거의 없음", "때때로 있음", "자주 있음", "매우 자주"];
 
   const scoreMap: Record<string, number> = {
-    전혀없음: 0,
-    거의없음: 1,
-    때때로있음: 2,
-    자주있음: 3,
-    매우자주: 4,
+    "전혀 없음": 0,
+    "거의 없음": 1,
+    "때때로 있음": 2,
+    "자주 있음": 3,
+    "매우 자주": 4,
   };
 
   const handleChange = (questionId: number, value: string) => {
