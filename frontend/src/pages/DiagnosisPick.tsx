@@ -1,3 +1,4 @@
+// src/pages/DiagnosisPick.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,7 +16,7 @@ const DiagnosisPick: React.FC = () => {
     {
       key: "GAD-7",
       title: "GAD-7 불안 자가검사",
-      description: "긴장 / 걱정 / 불안으로 인한 어려움 정도를 확인해요.",
+      description: "긴장, 걱정, 불안으로 인한 어려움 정도를 확인해요.",
       tag: "불안",
       path: "/gad7",
     },
@@ -29,7 +30,7 @@ const DiagnosisPick: React.FC = () => {
     {
       key: "mKPQ-16",
       title: "mKPQ-16 정신증 고위험 선별",
-      description: "현실감 / 지각 경험과 관련된 특이한 경험을 확인하는 선별도구예요.",
+      description: "현실감·지각 경험과 관련된 특이한 경험을 확인하는 선별도구예요.",
       tag: "초기정신건강",
       path: "/mkpq16",
     },
@@ -42,11 +43,8 @@ const DiagnosisPick: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 via-white to-purple-100 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-5xl mx-auto">
-        {/* 제목 */}
-        <header className="text-center mb-10 sm:mb-14 flex flex-col items-center justify-center space-y-5">
-          <div className="w-12 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mt-10">
-            <span className="text-white font-bold text-xs">S</span>
-          </div>
+        {/* 상단 영역 */}
+        <header className="text-center mb-10 sm:mb-14">
           <p className="text-xs sm:text-sm font-semibold tracking-[0.25em] text-indigo-500 uppercase">
             Soulsync Diagnosis
           </p>
@@ -62,7 +60,7 @@ const DiagnosisPick: React.FC = () => {
           </p>
         </header>
 
-        {/* 검사 카드 */}
+        {/* 검사 카드 그리드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
           {tests.map((test) => (
             <button
@@ -86,17 +84,11 @@ const DiagnosisPick: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="relative z-10 mt-20 text-center">
-          <div className="flex items-center justify-center space-x-3">
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs">S</span>
-            </div>
-            <p className="text-gray-500 text-sm">
-              <span className="font-medium"></span> 응답 내용은 SoulSync에서 더 섬세한 상담 경험을 제공하기 위해서만 사용되며,
+
+        <p className="mt-6 text-[11px] sm:text-xs text-center text-slate-500">
+          * 응답 내용은 SoulSync에서 더 섬세한 상담 경험을 제공하기 위해서만 사용되며,
           외부에 공유되지 않습니다.
-            </p>
-          </div>
-        </div>
+        </p>
       </div>
     </div>
   );
